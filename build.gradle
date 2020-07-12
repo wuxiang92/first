@@ -1,0 +1,108 @@
+plugins {
+	id 'org.springframework.boot' version '2.2.8.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id 'java'
+}
+
+group = 'com.will'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+	mybatisGenerator
+
+//	all*.exclude module: 'spring-boot-starter-logging'
+//	all*.exclude module: 'logback-classic'
+//	all*.exclude module: 'log4j-over-slf4j'
+//	all*.exclude module: 'slf4j-log4j12'
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('springCloudAlibabaVersion', "2.2.1.RELEASE")
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.springframework.boot:spring-boot-starter-quartz'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+//	implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+//	implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-config'
+//	implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
+//	implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-sentinel'
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.3'
+	implementation 'org.springframework.kafka:spring-kafka'
+	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'mysql:mysql-connector-java'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+	testImplementation 'org.springframework.kafka:spring-kafka-test'
+
+	mybatisGenerator 'org.mybatis.generator:mybatis-generator-core:1.3.6'
+	mybatisGenerator 'mysql:mysql-connector-java:5.1.45'
+	mybatisGenerator 'tk.mybatis:mapper:3.5.2'
+
+
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "com.alibaba.cloud:spring-cloud-alibaba-dependencies:${springCloudAlibabaVersion}"
+	}
+}
+
+test {
+	useJUnitPlatform()
+}
+
+def getDbProperties = {
+	def properties = new Properties()
+	file("src/main/resources/mybatis/config.properties").withInputStream { inputStream ->
+		properties.load(inputStream)
+	}
+	properties
+}
+
+task mybatisGenerate << {
+	def properties = getDbProperties()
+	ant.properties['targetProject'] = projectDir.path
+	ant.properties['driverClass'] = properties.getProperty("jdbc.driverClassName")
+	ant.properties['connectionURL'] = properties.getProperty("jdbc.url")
+	ant.properties['userId'] = properties.getProperty("jdbc.username")
+	ant.properties['password'] = properties.getProperty("jdbc.password")
+	ant.properties['src_main_java'] = sourceSets.main.java.srcDirs[0].path
+	ant.properties['src_main_resources'] = sourceSets.main.resources.srcDirs[0].path
+	ant.properties['modelPackage'] = properties.getProperty("package.model")
+	ant.properties['mapperPackage'] = properties.getProperty("package.mapper")
+	ant.properties['sqlMapperPackage'] = properties.getProperty("package.xml")
+	ant.taskdef(
+			name: 'mbgenerator',
+			classname: 'org.mybatis.generator.ant.GeneratorAntTask',
+			classpath: configurations.mybatisGenerator.asPath
+	)
+	ant.mbgenerator(overwrite: true,
+			configfile: 'src/main/resources/mybatis/generatorConfig.xml', verbose: true) {
+		propertyset {
+			propertyref(name: 'targetProject')
+			propertyref(name: 'userId')
+			propertyref(name: 'driverClass')
+			propertyref(name: 'connectionURL')
+			propertyref(name: 'password')
+			propertyref(name: 'src_main_java')
+			propertyref(name: 'src_main_resources')
+			propertyref(name: 'modelPackage')
+			propertyref(name: 'mapperPackage')
+			propertyref(name: 'sqlMapperPackage')
+		}
+	}
+}

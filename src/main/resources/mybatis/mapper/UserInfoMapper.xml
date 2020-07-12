@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.will.first.dao.UserInfoMapper">
+  <resultMap id="BaseResultMap" type="com.will.first.domain.UserInfo">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="mail" jdbcType="VARCHAR" property="mail" />
+    <result column="id_card" jdbcType="VARCHAR" property="idCard" />
+    <result column="gender" jdbcType="BIT" property="gender" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from will_user_info
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="com.will.first.domain.UserInfo">
+    insert into will_user_info (id, name, mail, 
+      id_card, gender)
+    values (#{id,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{mail,jdbcType=VARCHAR}, 
+      #{idCard,jdbcType=VARCHAR}, #{gender,jdbcType=BIT})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.will.first.domain.UserInfo">
+    update will_user_info
+    set name = #{name,jdbcType=VARCHAR},
+      mail = #{mail,jdbcType=VARCHAR},
+      id_card = #{idCard,jdbcType=VARCHAR},
+      gender = #{gender,jdbcType=BIT}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select id, name, mail, id_card, gender
+    from will_user_info
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select id, name, mail, id_card, gender
+    from will_user_info
+  </select>
+
+</mapper>
