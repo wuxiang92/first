@@ -8,5 +8,7 @@ public interface UserInfoService {
 
     List<UserInfo> queryAllUsers();
 
+    UserInfo getUserInfoById(Long id);
+
 
 }
